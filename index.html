@@ -171,7 +171,7 @@
 
         <label>Steinfarbe</label>
         <select id="stoneColor">
-          <option value="#1c1f24" selected>Schwarz (Granit)</option>
+          <option value="#2d3440" selected>Schwarz (Granit)</option>
           <option value="#30353c">Dunkelgrau</option>
           <option value="#6b6f76">Hellgrau</option>
           <option value="#c7c1b8">Marmor hell</option>
@@ -240,6 +240,11 @@
     const $ = (id) => document.getElementById(id);
 
     function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    function toNumber(value, fallback){
+      const n = Number(value);
+      return Number.isFinite(n) ? n : fallback;
+    }
 
     function hexToThreeColor(hex){
       return new THREE.Color(hex);
@@ -330,7 +335,7 @@
     // ----------------------------
     // State (Config)
     // ----------------------------
-    const state = {
+    const defaultState = {
       firstName: 'Anna',
       lastName: 'Mustermann',
       deathDate: '',
@@ -340,7 +345,7 @@
       lineGap: 12,
       padding: 34,
 
-      stoneColor: '#1c1f24',
+      stoneColor: '#2d3440',
       finish: 'polished',
       headShape: 'rect',
 
@@ -349,6 +354,8 @@
       tCm: 12,
       baseHCm: 18,
     };
+
+    const state = { ...defaultState };
 
     // ----------------------------
     // Three.js Setup
@@ -359,10 +366,10 @@
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b0f14);
+    scene.background = new THREE.Color(0x0f1724);
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 50);
-    camera.position.set(1.8, 1.2, 2.2);
+    camera.position.set(1.8, 1.35, 2.35);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -370,19 +377,20 @@
     controls.target.set(0, 0.65, 0);
 
     // Lights
-    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
-    const key = new THREE.DirectionalLight(0xffffff, 1.2);
+    scene.add(new THREE.HemisphereLight(0xcad7ff, 0x0a0c10, 0.35));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const key = new THREE.DirectionalLight(0xffffff, 1.35);
     key.position.set(3, 4, 2);
     scene.add(key);
 
-    const rim = new THREE.DirectionalLight(0xffffff, 0.6);
-    rim.position.set(-3, 2, -2);
+    const rim = new THREE.DirectionalLight(0xffffff, 0.75);
+    rim.position.set(-3, 2.4, -2);
     scene.add(rim);
 
     // Ground
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(12, 12),
-      new THREE.MeshStandardMaterial({ color: 0x0a0d12, roughness: 1.0, metalness: 0.0 })
+      new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 1.0, metalness: 0.0 })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = 0;
@@ -391,6 +399,13 @@
     // Group for model
     const modelGroup = new THREE.Group();
     scene.add(modelGroup);
+
+    // A subtle grid to anchor the scene visually
+    const grid = new THREE.GridHelper(6, 24, 0x2c5eff, 0x1a1f2b);
+    grid.position.y = -0.001;
+    grid.material.opacity = 0.12;
+    grid.material.transparent = true;
+    scene.add(grid);
 
     // ----------------------------
     // Engraving texture (canvas -> texture)
@@ -494,10 +509,10 @@
     function buildModel(){
       modelGroup.clear();
 
-      const w = clamp(state.wCm, 60, 140) / 100;    // meters
-      const h = clamp(state.hCm, 70, 160) / 100;
-      const t = clamp(state.tCm, 6, 30) / 100;
-      const baseH = clamp(state.baseHCm, 10, 40) / 100;
+      const w = clamp(state.wCm || defaultState.wCm, 60, 140) / 100;    // meters
+      const h = clamp(state.hCm || defaultState.hCm, 70, 160) / 100;
+      const t = clamp(state.tCm || defaultState.tCm, 6, 30) / 100;
+      const baseH = clamp(state.baseHCm || defaultState.baseHCm, 10, 40) / 100;
 
       const stoneCol = hexToThreeColor(state.stoneColor);
 
@@ -543,6 +558,7 @@
         extrude.center(); // center around origin
         headGeo = extrude;
       } else {
+        // Extremely einfache Demo-Geometrie: ein Quader als Kopfstein
         headGeo = new THREE.BoxGeometry(w * 0.52, h, t);
       }
 
@@ -600,17 +616,17 @@
       state.dateFormat = $('dateFormat').value;
       state.fontFamily = $('fontFamily').value;
       state.align = $('align').value;
-      state.lineGap = Number($('lineGap').value);
-      state.padding = Number($('padding').value);
+      state.lineGap = toNumber($('lineGap').value, defaultState.lineGap);
+      state.padding = toNumber($('padding').value, defaultState.padding);
 
       state.stoneColor = $('stoneColor').value;
       state.finish = $('finish').value;
       state.headShape = $('headShape').value;
 
-      state.wCm = Number($('w').value);
-      state.hCm = Number($('h').value);
-      state.tCm = Number($('t').value);
-      state.baseHCm = Number($('baseH').value);
+      state.wCm = toNumber($('w').value, defaultState.wCm);
+      state.hCm = toNumber($('h').value, defaultState.hCm);
+      state.tCm = toNumber($('t').value, defaultState.tCm);
+      state.baseHCm = toNumber($('baseH').value, defaultState.baseHCm);
     }
 
     function applyAll(){
