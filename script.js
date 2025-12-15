@@ -3,6 +3,7 @@
 
 // Globale Variablen für Three.js Szene
 let scene, camera, renderer, controls;
+let ambientLight, directionalLight;
 let baseMesh, headstoneMesh, inscriptionPlane;
 
 // Inscription drawing
@@ -34,486 +35,22 @@ const materialColors = {
     'Marmor Black': '#2e2e2e'
 };
 
-// Mapping für externe 3D‑Modelle (GLB). Wenn ein Modell hier gelistet ist,
-// wird die zugehörige Datei geladen und als Geometrie verwendet.
-const modelFiles = {
-    'M001': 'models/M001.glb'
-};
+// Einfache Würfelabmessungen für das sichtbare Modell
+const cubeSize = { width: 2, height: 3, depth: 1 };
 
-// GLTF‑Loader zum Laden von .glb‑Dateien (wird in initScene initialisiert)
-let gltfLoader;
-
-/*
- * Erstellt ein oder mehrere 2D‑Shapes für das angegebene Modell. Die Shapes
- * beschreiben die Silhouette des Grabsteins in der XY‑Ebene. Sie werden
- * anschließend per ExtrudeGeometry in die Tiefe extrudiert. Die Maße sind
- * normiert auf eine Breite von ca. 2 Einheiten und eine Höhe von ca. 3–3.5
- * Einheiten. Die Definitionen sind einfache Annäherungen basierend auf
- * den Modellskizzen aus dem Katalog (Seiten 21 & 22).
- * @param {string} modelName Modellbezeichnung (z. B. 'M001')
- * @returns {THREE.Shape[]} Liste von Shapes (kann mehrere enthalten)
- */
-function createModelShapes(modelName) {
-    const shapes = [];
-    switch (modelName) {
-        case 'M001': {
-            /**
-             * Modell M001 (angepasst an bereitgestelltes Bild):
-             * Die Silhouette ist trapezförmig – die Basis ist etwas schmaler als
-             * die Breite oben. Links steigt der Stein leicht nach außen an. Im
-             * oberen Bereich bildet sich ein kleiner "Buckel" oder Höcker leicht
-             * links der Mitte, bevor die Oberkante sanft nach rechts abfällt. Die
-             * rechte Seite verläuft dezent nach innen zum unteren Ende.
-             */
-            const s = new THREE.Shape();
-            // Startpunkt unten links (etwas schmalere Basis)
-            s.moveTo(-0.9, 0.0);
-            // linke Seitenkante: leicht nach außen geneigt
-            s.lineTo(-1.0, 3.0);
-            // kleiner Höcker kurz nach der linken Ecke
-            s.quadraticCurveTo(-0.8, 3.6, -0.6, 3.4);
-            // sanft abfallende Oberkante nach rechts
-            s.quadraticCurveTo(0.2, 3.2, 1.0, 2.9);
-            // rechte Kante: leicht nach innen geneigt zur Basis
-            s.lineTo(0.9, 0.0);
-            // Boden abschließen
-            s.lineTo(-0.9, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M002': {
-            // Zweifacher Wellenbogen
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 2.5);
-            s.bezierCurveTo(-0.6, 3.2, -0.3, 3.4, 0.0, 2.9);
-            s.bezierCurveTo(0.3, 3.4, 0.6, 3.2, 1.0, 2.5);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M003': {
-            // Modell M003: schräges Dach, rechts deutlich höher als links
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            // linke Seitenkante
-            s.lineTo(-1.0, 2.4);
-            // Linie zum Übergangspunkt der Schräge
-            s.lineTo(-0.3, 3.0);
-            // Spitze rechts oben
-            s.lineTo(1.0, 3.6);
-            // rechte Seitenkante
-            s.lineTo(1.0, 0.0);
-            // zurück
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M004': {
-            // Sanfter Bogen
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 2.7);
-            s.quadraticCurveTo(0.0, 3.2, 1.0, 2.7);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M005': {
-            // Rundes Dach (Halbkreis)
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 2.7);
-            s.bezierCurveTo(-0.5, 3.5, 0.5, 3.5, 1.0, 2.7);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M006': {
-            // Modell M006: spiegelbildlich zu M001 – der Einschnitt befindet sich oben rechts,
-            // während der höchste Punkt eher links liegt. Die Oberkante fällt nach links ab.
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            // linke Kante gerade nach oben
-            s.lineTo(-1.0, 2.8);
-            // Anstieg zum höchsten Punkt etwas links der Mitte
-            s.quadraticCurveTo(-0.6, 3.4, -0.3, 3.5);
-            // sanfter Übergang zur rechten Seite mit Einschnitt
-            s.quadraticCurveTo(0.2, 3.3, 0.6, 3.0);
-            s.quadraticCurveTo(0.9, 2.7, 1.0, 2.4);
-            // rechte Kante nach unten
-            s.lineTo(1.0, 0.0);
-            // zurück zum Start
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M007': {
-            // Rechteckiger Stein
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 3.0);
-            s.lineTo(1.0, 3.0);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M008': {
-            // Doppelwelle mit V-förmiger Mitte
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 2.7);
-            s.bezierCurveTo(-0.6, 3.4, -0.3, 3.5, 0.0, 2.9);
-            s.bezierCurveTo(0.3, 3.5, 0.6, 3.4, 1.0, 2.7);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M009': {
-            // Sanfte Rundung ähnlich M004
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 2.8);
-            s.quadraticCurveTo(0.0, 3.3, 1.0, 2.8);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M010': {
-            // Modell M010: schlanke Figur mit sanft geschwungenen Flanken und einer asymmetrischen
-            // Oberkante mit leichtem Knick auf der linken Seite.
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            // linke Flanke: sanft nach oben schwingend
-            s.bezierCurveTo(-0.8, 1.4, -0.8, 2.6, -0.6, 3.2);
-            // oberer Mittelbereich: markante Spitze in der Mitte
-            s.lineTo(0.0, 3.6);
-            s.lineTo(0.6, 3.2);
-            // rechte Flanke: symmetrisch hinab
-            s.bezierCurveTo(0.8, 2.6, 0.8, 1.4, 1.0, 0.0);
-            // Unterkante schließen
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M011': {
-            // Modell M011: zwei separate Stelen mit gegensätzlicher Schräge. Zwischen den
-            // Stelen bleibt ein freier Spalt.
-            const left = new THREE.Shape();
-            left.moveTo(-1.0, 0.0);
-            left.lineTo(-1.0, 2.6);
-            left.lineTo(-0.6, 3.2);
-            left.lineTo(-0.2, 2.8);
-            left.lineTo(-0.2, 0.0);
-            left.lineTo(-1.0, 0.0);
-            const right = new THREE.Shape();
-            right.moveTo(0.2, 0.0);
-            right.lineTo(0.2, 2.8);
-            right.lineTo(0.6, 3.2);
-            right.lineTo(1.0, 2.6);
-            right.lineTo(1.0, 0.0);
-            right.lineTo(0.2, 0.0);
-            shapes.push(left, right);
-            break;
-        }
-        case 'M012': {
-            // Modell M012: gebrochene Spitze mit zwei deutlichen Zacken
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            // linke Kante
-            s.lineTo(-1.0, 2.8);
-            // erster hoher Zacken links
-            s.lineTo(-0.6, 3.7);
-            // Einbuchtung zwischen den Zacken
-            s.lineTo(-0.2, 3.2);
-            // zweiter hoher Zacken in der Mitte
-            s.lineTo(0.2, 3.8);
-            // Abfall zur rechten Seite
-            s.lineTo(0.7, 3.4);
-            s.lineTo(1.0, 2.9);
-            // rechte Kante nach unten
-            s.lineTo(1.0, 0.0);
-            // schließe zurück zum Start
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M013': {
-            // Modell M013: elegante, schlanke Silhouette mit zwei sanften Erhebungen
-            // im oberen Bereich (symmetrischer Doppelbogen). Die Flanken sind weich geschwungen.
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            // linke Flanke
-            s.bezierCurveTo(-0.9, 1.6, -0.9, 2.5, -0.8, 3.4);
-            // erste Erhebung links
-            s.quadraticCurveTo(-0.4, 3.8, 0.0, 3.5);
-            // zweite Erhebung rechts
-            s.quadraticCurveTo(0.4, 3.8, 0.8, 3.4);
-            // rechte Flanke
-            s.bezierCurveTo(0.9, 2.5, 0.9, 1.6, 1.0, 0.0);
-            // zurück
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M014': {
-            // Modell M014: breite, geschwungene Form mit betontem Bauch
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 1.9);
-            // linke Bauchkurve
-            s.bezierCurveTo(-0.9, 3.2, -0.3, 3.8, 0.0, 3.4);
-            // rechte Bauchkurve
-            s.bezierCurveTo(0.3, 3.8, 0.9, 3.2, 1.0, 1.9);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M015': {
-            // Modell M015: schlanke, asymmetrische Wellenform mit leichtem Schwung
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 2.2);
-            // linke Kurve
-            s.bezierCurveTo(-0.8, 3.4, -0.4, 3.8, 0.0, 3.2);
-            // rechte Kurve etwas niedriger
-            s.bezierCurveTo(0.5, 3.6, 0.8, 3.2, 1.0, 2.0);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M016': {
-            // Modell M016: rechte Seite bildet einen großen Halbkreis, linke Seite gerade
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 2.6);
-            // Übergang zum runden rechten Teil
-            s.quadraticCurveTo(-0.5, 3.3, 0.2, 3.6);
-            s.quadraticCurveTo(1.4, 3.6, 1.1, 2.4);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M017': {
-            // Modell M017: reich verzierter Kopf mit mehreren stufigen Erhebungen (kronenähnlich).
-            // Die Form besteht aus einer Reihe von aufsteigenden Stufen hin zur mittleren Spitze
-            // und spiegelt sich dann symmetrisch.
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 2.0);
-            // erste Stufe links
-            s.lineTo(-0.9, 2.4);
-            // zweite Stufe links
-            s.lineTo(-0.7, 2.7);
-            // dritte Stufe links
-            s.lineTo(-0.4, 3.0);
-            // mittlere Spitze
-            s.lineTo(0.0, 3.3);
-            // Spiegelung zur rechten Seite
-            s.lineTo(0.4, 3.0);
-            s.lineTo(0.7, 2.7);
-            s.lineTo(0.9, 2.4);
-            s.lineTo(1.0, 2.0);
-            // rechte Kante nach unten
-            s.lineTo(1.0, 0.0);
-            // zurück zum Anfang
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M018': {
-            // Modell M018: asymmetrische Doppelwelle – links niedriger, rechts höher
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 2.3);
-            // linke Welle (niedriger)
-            s.quadraticCurveTo(-0.6, 3.0, -0.2, 3.2);
-            // Übergang zur hohen Welle
-            s.quadraticCurveTo(0.3, 3.6, 0.6, 3.7);
-            s.quadraticCurveTo(0.9, 3.5, 1.0, 2.9);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M019': {
-            // Modell M019: dynamische, wellige Silhouette mit ausgeprägter Rundung rechts
-            const s = new THREE.Shape();
-            s.moveTo(-1.2, 0.0);
-            s.lineTo(-1.2, 2.0);
-            // mehrfache Wellen links (gestaffelte Höhen)
-            s.bezierCurveTo(-1.0, 3.0, -0.8, 3.8, -0.4, 3.6);
-            // höchste Erhebung in der Mitte
-            s.bezierCurveTo(0.1, 4.0, 0.5, 3.8, 0.7, 3.2);
-            // rechte Rundung mit tieferem Endpunkt
-            s.bezierCurveTo(1.2, 2.6, 1.3, 2.2, 1.2, 1.6);
-            s.lineTo(1.2, 0.0);
-            s.lineTo(-1.2, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M020': {
-            // Modell M020: breites, leicht geschwungenes Dach
-            const s = new THREE.Shape();
-            s.moveTo(-1.2, 0.0);
-            s.lineTo(-1.2, 2.1);
-            s.quadraticCurveTo(-0.4, 2.8, 0.0, 2.7);
-            s.quadraticCurveTo(0.4, 2.8, 1.2, 2.1);
-            s.lineTo(1.2, 0.0);
-            s.lineTo(-1.2, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M021': {
-            // Modell M021: rechteckig mit leicht rundem oberen Abschluss
-            const s = new THREE.Shape();
-            s.moveTo(-1.1, 0.0);
-            s.lineTo(-1.1, 2.7);
-            s.quadraticCurveTo(-1.1, 3.2, -0.8, 3.2);
-            s.lineTo(0.8, 3.2);
-            s.quadraticCurveTo(1.1, 3.2, 1.1, 2.7);
-            s.lineTo(1.1, 0.0);
-            s.lineTo(-1.1, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M022': {
-            // Modell M022: zwei schmale Stelen mit schräg zulaufenden Köpfen und Zwischenraum
-            const left = new THREE.Shape();
-            // linker Pfosten
-            left.moveTo(-1.0, 0.0);
-            left.lineTo(-1.0, 2.2);
-            left.lineTo(-0.6, 3.0);
-            left.lineTo(-0.3, 3.0);
-            left.lineTo(-0.3, 0.0);
-            left.lineTo(-1.0, 0.0);
-            const right = new THREE.Shape();
-            // rechter Pfosten
-            right.moveTo(0.3, 0.0);
-            right.lineTo(0.3, 3.0);
-            right.lineTo(0.6, 3.0);
-            right.lineTo(1.0, 2.2);
-            right.lineTo(1.0, 0.0);
-            right.lineTo(0.3, 0.0);
-            // Mittelstück: rechteckige Verbindung zwischen den Pfosten im unteren Bereich
-            const connector = new THREE.Shape();
-            connector.moveTo(-0.3, 0.0);
-            connector.lineTo(-0.3, 1.2);
-            connector.lineTo(0.3, 1.2);
-            connector.lineTo(0.3, 0.0);
-            connector.lineTo(-0.3, 0.0);
-            shapes.push(left, right, connector);
-            break;
-        }
-        case 'M023': {
-            // Modell M023: asymmetrischer Stein mit herzförmigem Ausschnitt
-            const s = new THREE.Shape();
-            s.moveTo(-1.0, 0.0);
-            s.lineTo(-1.0, 2.5);
-            // linke Schulter
-            s.lineTo(-0.6, 3.2);
-            // mittlere Erhebung
-            s.lineTo(-0.2, 3.5);
-            // rechter Übergang mit sanfter Schräge
-            s.lineTo(0.5, 3.0);
-            s.lineTo(1.0, 2.4);
-            s.lineTo(1.0, 0.0);
-            s.lineTo(-1.0, 0.0);
-            // Herz/Loch in der oberen rechten Hälfte
-            const hole = new THREE.Path();
-            hole.moveTo(0.3, 2.5);
-            hole.quadraticCurveTo(0.1, 2.3, 0.0, 2.5);
-            hole.quadraticCurveTo(0.2, 2.8, 0.3, 2.5);
-            s.holes.push(hole);
-            shapes.push(s);
-            break;
-        }
-        case 'M024': {
-            // Modell M024: großes Grabmal mit zwei Türmchen und geschwungenem Mittelteil
-            const s = new THREE.Shape();
-            s.moveTo(-1.5, 0.0);
-            // linker Turm
-            s.lineTo(-1.5, 3.0);
-            s.lineTo(-1.4, 3.8);
-            s.lineTo(-1.3, 4.2);
-            s.lineTo(-1.2, 3.8);
-            s.lineTo(-1.1, 3.0);
-            // linker Übergang zum Mittelteil
-            s.lineTo(-0.7, 2.6);
-            s.lineTo(-0.5, 3.2);
-            s.lineTo(0.0, 3.5);
-            s.lineTo(0.5, 3.2);
-            s.lineTo(0.7, 2.6);
-            // rechter Turm
-            s.lineTo(1.1, 3.0);
-            s.lineTo(1.2, 3.8);
-            s.lineTo(1.3, 4.2);
-            s.lineTo(1.4, 3.8);
-            s.lineTo(1.5, 3.0);
-            s.lineTo(1.5, 0.0);
-            s.lineTo(-1.5, 0.0);
-            shapes.push(s);
-            break;
-        }
-        case 'M025': {
-            // Modell M025: breit mit Türmchen und Kuppel sowie Torbogen unten
-            const s = new THREE.Shape();
-            s.moveTo(-1.6, 0.0);
-            // linkes Torsegment
-            s.lineTo(-1.6, 2.3);
-            s.lineTo(-1.4, 3.4);
-            // linke Kuppel
-            s.quadraticCurveTo(-1.2, 3.8, -0.9, 3.6);
-            s.quadraticCurveTo(-0.6, 3.4, -0.4, 2.8);
-            // oberer Mittelbereich
-            s.lineTo(-0.4, 3.2);
-            s.quadraticCurveTo(0.0, 3.8, 0.4, 3.2);
-            // rechte Kuppel
-            s.lineTo(0.4, 2.8);
-            s.quadraticCurveTo(0.6, 3.4, 0.9, 3.6);
-            s.quadraticCurveTo(1.2, 3.8, 1.4, 3.4);
-            s.lineTo(1.6, 2.3);
-            s.lineTo(1.6, 0.0);
-            s.lineTo(-1.6, 0.0);
-            // Torbogen (Loch) unten in der Mitte
-            const arch = new THREE.Path();
-            arch.moveTo(-0.4, 0.0);
-            arch.lineTo(-0.4, 0.6);
-            arch.quadraticCurveTo(0.0, 1.0, 0.4, 0.6);
-            arch.lineTo(0.4, 0.0);
-            arch.lineTo(-0.4, 0.0);
-            s.holes.push(arch);
-            shapes.push(s);
-            break;
-        }
-        default: {
-            // Fallback: rechteck
-            const s = new THREE.Shape();
-            s.moveTo(-1, 0);
-            s.lineTo(-1, 3);
-            s.lineTo(1, 3);
-            s.lineTo(1, 0);
-            s.lineTo(-1, 0);
-            shapes.push(s);
-            break;
-        }
-    }
-    return shapes;
+// Erzeugt ein einfaches Box-Objekt für das einzige Modell.
+function createCubeObject() {
+    const geom = new THREE.BoxGeometry(cubeSize.width, cubeSize.height, cubeSize.depth);
+    return new THREE.Mesh(geom, null);
 }
+
 
 // Aktuell ausgewählte Optionen
 let currentColor = materialColors['Indian Black'];
+let currentColorName = 'Indian Black';
 // Standardmodell zu Beginn (erstes aus der Liste)
 let currentShape = 'M001';
+let backgroundColor = '#f4f7fb';
 
 /**
  * Initialisiert die Three.js Szene, den Renderer und das Steuerungssystem.
@@ -524,6 +61,7 @@ function initScene() {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(new THREE.Color(backgroundColor));
 
     // Szene
     scene = new THREE.Scene();
@@ -533,11 +71,11 @@ function initScene() {
     camera.position.set(5, 5, 8);
 
     // Beleuchtung
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambient);
-    const directional = new THREE.DirectionalLight(0xffffff, 0.7);
-    directional.position.set(5, 10, 3);
-    scene.add(directional);
+    ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    directionalLight.position.set(5, 10, 3);
+    scene.add(directionalLight);
 
     // Orbit Controls
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -554,9 +92,6 @@ function initScene() {
     baseMesh.position.set(0, 0, 0);
     baseMesh.receiveShadow = false;
     scene.add(baseMesh);
-
-    // GLTF‑Loader initialisieren (nur einmal)
-    gltfLoader = new THREE.GLTFLoader();
 
     // Headstone und Inschrift erstellen
     updateHeadstone();
@@ -581,33 +116,11 @@ function onWindowResize() {
 }
 
 /**
- * Erstellt eine Headstone‑Geometrie basierend auf der gewählten Form.
- * @param {string} shapeName Name der Form ('rect', 'arch', 'slanted')
- * @returns {THREE.BufferGeometry}
- */
-/**
- * Erstellt ein dreidimensionales Objekt (Mesh oder Gruppe) für das angegebene Modell.
- * Dabei werden eine oder mehrere Shapes generiert und als ExtrudeGeometry in die Tiefe extrudiert.
- * Für einfache Formen wird ein einzelnes Mesh zurückgegeben, für komplexere Modelle ein Group.
- * @param {string} modelName Name des Modells (z. B. 'M001').
+ * Erstellt das Mesh für den aktuell verwendeten Würfel-Grabstein.
  * @returns {THREE.Object3D}
  */
-function createHeadstoneObject(modelName) {
-    const shapes = createModelShapes(modelName);
-    const depth = 0.5;
-    const extrudeSettings = { depth: depth, bevelEnabled: false, steps: 1 };
-    if (shapes.length === 1) {
-        const geom = new THREE.ExtrudeGeometry(shapes[0], extrudeSettings);
-        return new THREE.Mesh(geom, null);
-    }
-    // Mehrere Shapes: erstelle separate Meshes und füge sie zu einer Gruppe zusammen
-    const group = new THREE.Group();
-    shapes.forEach((shp) => {
-        const geom = new THREE.ExtrudeGeometry(shp, extrudeSettings);
-        const mesh = new THREE.Mesh(geom, null);
-        group.add(mesh);
-    });
-    return group;
+function createHeadstoneObject() {
+    return createCubeObject();
 }
 
 /**
@@ -641,56 +154,8 @@ function updateHeadstone() {
         inscriptionPlane = null;
     }
 
-    // Prüfe, ob ein externes 3D‑Modell für die aktuelle Form vorliegt
-    const glbPath = modelFiles[currentShape];
-    if (glbPath) {
-        // Lade das .glb‑Modell asynchron und erstelle den Stein daraus
-        gltfLoader.load(glbPath, (gltf) => {
-            const obj = gltf.scene.clone();
-            // Weise allen Meshes das aktuell gewählte Material zu
-            obj.traverse((child) => {
-                if (child.isMesh) {
-                    child.material = new THREE.MeshStandardMaterial({ color: new THREE.Color(currentColor) });
-                }
-            });
-            // Skaliere das Modell auf eine Breite von ca. 2 und eine Höhe von ca. 3.5 Einheiten
-            const bbox0 = new THREE.Box3().setFromObject(obj);
-            const w0 = bbox0.max.x - bbox0.min.x;
-            const h0 = bbox0.max.y - bbox0.min.y;
-            const scaleX = 2.0 / w0;
-            const scaleY = 3.5 / h0;
-            const s = Math.min(scaleX, scaleY);
-            obj.scale.set(s, s, s);
-            // Berechne Bounding‑Box nach Skalierung
-            const bbox = new THREE.Box3().setFromObject(obj);
-            const width = bbox.max.x - bbox.min.x;
-            const height = bbox.max.y - bbox.min.y;
-            // Positioniere das Modell auf dem Podest (Boden y = 0.5)
-            obj.position.set(0, 0.5 - bbox.min.y, 0);
-            headstoneMesh = obj;
-            scene.add(headstoneMesh);
-            // Inschrift vorbereiten
-            inscriptionTexture = new THREE.CanvasTexture(inscriptionCanvas);
-            inscriptionTexture.encoding = THREE.sRGBEncoding;
-            inscriptionTexture.minFilter = THREE.LinearFilter;
-            const planeGeom = new THREE.PlaneGeometry(width, height);
-            const planeMat = new THREE.MeshBasicMaterial({ map: inscriptionTexture, transparent: true });
-            inscriptionPlane = new THREE.Mesh(planeGeom, planeMat);
-            // Position der Inschrift: Mittelpunkt in XY, etwas vor Frontz
-            const centerX = (bbox.min.x + bbox.max.x) / 2;
-            const centerY = (bbox.min.y + bbox.max.y) / 2;
-            // Ermittle die vordere Z‑Koordinate (nach Skalierung)
-            const frontZ = bbox.max.z;
-            inscriptionPlane.position.set(centerX, centerY, frontZ + 0.01);
-            headstoneMesh.add(inscriptionPlane);
-            updateInscriptionCanvas();
-        }, undefined, (error) => {
-            console.error('Fehler beim Laden der GLB‑Datei', error);
-        });
-        return;
-    }
-    // Kein externes Modell: erstelle die Geometrie basierend auf dem aktuellen Shape
-    const object = createHeadstoneObject(currentShape);
+    // Erstelle das einfache Würfelmodell
+    const object = createHeadstoneObject();
     // Durchlaufe alle Kind-Meshes, um ihnen das Material zuzuweisen
     const material = new THREE.MeshStandardMaterial({ color: new THREE.Color(currentColor) });
     if (object.isMesh) {
@@ -732,6 +197,7 @@ function updateHeadstone() {
     // Füge den Plane als Kind-Objekt hinzu
     headstoneMesh.add(inscriptionPlane);
     updateInscriptionCanvas();
+    refreshSummary();
 }
 
 /**
@@ -782,6 +248,7 @@ function updateInscriptionCanvas() {
     inscriptionCtx.fillText(`† ${deathDate}`, centerX, currentY);
     // Textur aktualisieren
     if (inscriptionTexture) inscriptionTexture.needsUpdate = true;
+    refreshSummary();
 }
 
 /**
@@ -796,22 +263,74 @@ function populateColorOptions() {
         div.title = name;
         div.style.backgroundColor = color;
         div.dataset.color = color;
+        div.dataset.name = name;
         div.addEventListener('click', () => {
             currentColor = color;
+            currentColorName = name;
             updateSelectedSwatch(div);
             updateHeadstone();
         });
         container.appendChild(div);
     });
-    // Markiere die erste als ausgewählt
-    if (container.firstChild) {
+    const defaultSwatch = Array.from(container.children).find((el) => el.dataset.color === currentColor);
+    if (defaultSwatch) {
+        updateSelectedSwatch(defaultSwatch);
+    } else if (container.firstChild) {
         updateSelectedSwatch(container.firstChild);
+        currentColor = container.firstChild.dataset.color;
+        currentColorName = container.firstChild.dataset.name;
     }
 }
 
 function updateSelectedSwatch(selectedDiv) {
     document.querySelectorAll('.swatch').forEach(el => el.classList.remove('selected'));
     selectedDiv.classList.add('selected');
+}
+
+function refreshSummary() {
+    const summary = document.getElementById('selection-summary');
+    if (!summary) return;
+    const firstName = document.getElementById('first-name').value;
+    const lastName = document.getElementById('last-name').value;
+    const birthDate = document.getElementById('birth-date').value;
+    const deathDate = document.getElementById('death-date').value;
+    const fontSize = document.getElementById('font-size').value;
+    const inscriptionColor = document.getElementById('inscription-color').selectedOptions[0].textContent;
+
+    summary.innerHTML = `
+        <div class="summary-item">
+            <p class="label">Modell</p>
+            <p class="value">${currentShape}</p>
+        </div>
+        <div class="summary-item">
+            <p class="label">Material</p>
+            <p class="value">${currentColorName}</p>
+        </div>
+        <div class="summary-item">
+            <p class="label">Inschrift</p>
+            <p class="value">${firstName} ${lastName}</p>
+        </div>
+        <div class="summary-item">
+            <p class="label">Daten</p>
+            <p class="value">* ${birthDate} · † ${deathDate}</p>
+        </div>
+        <div class="summary-item">
+            <p class="label">Schrift</p>
+            <p class="value">${fontSize} | ${inscriptionColor}</p>
+        </div>
+    `;
+}
+
+function updateLightBadge(value) {
+    const badge = document.getElementById('light-value');
+    if (badge) badge.textContent = `${Math.round(value * 100)}%`;
+}
+
+function resetView() {
+    if (!camera || !controls) return;
+    camera.position.set(5, 5, 8);
+    controls.target.set(0, 1.5, 0);
+    controls.update();
 }
 
 /**
@@ -823,8 +342,20 @@ function bindUI() {
         updateHeadstone();
     });
     ['first-name','last-name','birth-date','death-date','font-size','inscription-color','font-select'].forEach(id => {
-        document.getElementById(id).addEventListener('input', () => updateInscriptionCanvas());
+        const el = document.getElementById(id);
+        el.addEventListener('input', () => updateInscriptionCanvas());
+        el.addEventListener('change', () => updateInscriptionCanvas());
     });
+    document.getElementById('light-intensity').addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (directionalLight) directionalLight.intensity = val;
+        updateLightBadge(val);
+    });
+    document.getElementById('bg-select').addEventListener('change', (e) => {
+        backgroundColor = e.target.value;
+        if (renderer) renderer.setClearColor(new THREE.Color(backgroundColor));
+    });
+    document.getElementById('reset-view').addEventListener('click', () => resetView());
     document.getElementById('download-btn').addEventListener('click', () => {
         // Bild aus Canvas extrahieren
         renderer.render(scene, camera);
@@ -843,4 +374,6 @@ window.addEventListener('DOMContentLoaded', () => {
     populateColorOptions();
     bindUI();
     initScene();
+    updateLightBadge(parseFloat(document.getElementById('light-intensity').value));
+    refreshSummary();
 });
