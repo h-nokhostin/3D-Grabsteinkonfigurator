@@ -154,8 +154,57 @@ function updateHeadstone() {
         inscriptionPlane = null;
     }
 
-    // Erstelle das einfache Würfelmodell
-    const object = createHeadstoneObject();
+    // Prüfe, ob ein externes 3D‑Modell für die aktuelle Form vorliegt
+    const glbPath = modelFiles[currentShape];
+    if (glbPath) {
+        // Lade das .glb‑Modell asynchron und erstelle den Stein daraus
+        gltfLoader.load(glbPath, (gltf) => {
+            const obj = gltf.scene.clone();
+            // Weise allen Meshes das aktuell gewählte Material zu
+            obj.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = new THREE.MeshStandardMaterial({ color: new THREE.Color(currentColor) });
+                }
+            });
+            // Skaliere das Modell auf eine Breite von ca. 2 und eine Höhe von ca. 3.5 Einheiten
+            const bbox0 = new THREE.Box3().setFromObject(obj);
+            const w0 = bbox0.max.x - bbox0.min.x;
+            const h0 = bbox0.max.y - bbox0.min.y;
+            const scaleX = 2.0 / w0;
+            const scaleY = 3.5 / h0;
+            const s = Math.min(scaleX, scaleY);
+            obj.scale.set(s, s, s);
+            // Berechne Bounding‑Box nach Skalierung
+            const bbox = new THREE.Box3().setFromObject(obj);
+            const width = bbox.max.x - bbox.min.x;
+            const height = bbox.max.y - bbox.min.y;
+            // Positioniere das Modell auf dem Podest (Boden y = 0.5)
+            obj.position.set(0, 0.5 - bbox.min.y, 0);
+            headstoneMesh = obj;
+            scene.add(headstoneMesh);
+            // Inschrift vorbereiten
+            inscriptionTexture = new THREE.CanvasTexture(inscriptionCanvas);
+            inscriptionTexture.encoding = THREE.sRGBEncoding;
+            inscriptionTexture.minFilter = THREE.LinearFilter;
+            const planeGeom = new THREE.PlaneGeometry(width, height);
+            const planeMat = new THREE.MeshBasicMaterial({ map: inscriptionTexture, transparent: true });
+            inscriptionPlane = new THREE.Mesh(planeGeom, planeMat);
+            // Position der Inschrift: Mittelpunkt in XY, etwas vor Frontz
+            const centerX = (bbox.min.x + bbox.max.x) / 2;
+            const centerY = (bbox.min.y + bbox.max.y) / 2;
+            // Ermittle die vordere Z‑Koordinate (nach Skalierung)
+            const frontZ = bbox.max.z;
+            inscriptionPlane.position.set(centerX, centerY, frontZ + 0.01);
+            headstoneMesh.add(inscriptionPlane);
+            updateInscriptionCanvas();
+            refreshSummary();
+        }, undefined, (error) => {
+            console.error('Fehler beim Laden der GLB‑Datei', error);
+        });
+        return;
+    }
+    // Kein externes Modell: erstelle die Geometrie basierend auf dem aktuellen Shape
+    const object = createHeadstoneObject(currentShape);
     // Durchlaufe alle Kind-Meshes, um ihnen das Material zuzuweisen
     const material = new THREE.MeshStandardMaterial({ color: new THREE.Color(currentColor) });
     if (object.isMesh) {
