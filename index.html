@@ -1,974 +1,738 @@
 <!doctype html>
 <html lang="de">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Einzelgrab 3D-Konfigurator (Demo)</title>
-    <style>
-      :root {
-        color-scheme: light;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        font-family:
-          system-ui,
-          -apple-system,
-          Segoe UI,
-          Roboto,
-          Arial,
-          sans-serif;
-        background: #f5f7fb;
-        color: #1f2933;
-        height: 100vh;
-        overflow: hidden;
-      }
-      .app {
-        display: grid;
-        grid-template-columns: 360px 1fr;
-        height: 100vh;
-      }
-      .panel {
-        padding: 14px;
-        border-right: 1px solid rgba(15, 23, 42, 0.06);
-        background: linear-gradient(180deg, #ffffff, #f8fbff);
-        overflow: auto;
-      }
-      .panel h1 {
-        font-size: 16px;
-        margin: 0 0 10px 0;
-        letter-spacing: 0.2px;
-      }
-      .card {
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        background: rgba(255, 255, 255, 0.92);
-        border-radius: 14px;
-        padding: 12px;
-        margin-bottom: 12px;
-      }
-      .card h2 {
-        font-size: 13px;
-        margin: 0 0 10px 0;
-        opacity: 0.9;
-      }
-      label {
-        display: block;
-        font-size: 12px;
-        opacity: 0.85;
-        margin: 10px 0 6px;
-      }
-      input,
-      select,
-      button {
-        width: 100%;
-        padding: 10px 10px;
-        border-radius: 10px;
-        border: 1px solid rgba(15, 23, 42, 0.12);
-        background: rgba(255, 255, 255, 0.9);
-        color: #1f2933;
-        outline: none;
-      }
-      input::placeholder {
-        color: rgba(31, 41, 51, 0.45);
-      }
-      .row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      .btnrow {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-top: 10px;
-      }
-      button {
-        cursor: pointer;
-        border: 1px solid rgba(15, 23, 42, 0.16);
-        background: linear-gradient(180deg, #ffffff, #e8eef8);
-        transition: transform 0.05s ease;
-      }
-      button:active {
-        transform: translateY(1px);
-      }
-      .hint {
-        font-size: 12px;
-        opacity: 0.75;
-        line-height: 1.35;
-        margin-top: 8px;
-      }
-      .canvasWrap {
-        position: relative;
-        width: 100%;
-        height: 100%;
-      }
-      #c {
-        width: 100%;
-        height: 100%;
-        display: block;
-      }
-      .badge {
-        position: absolute;
-        left: 12px;
-        bottom: 12px;
-        padding: 8px 10px;
-        border-radius: 999px;
-        border: 1px solid rgba(15, 23, 42, 0.18);
-        background: rgba(255, 255, 255, 0.92);
-        font-size: 12px;
-        opacity: 0.9;
-        user-select: none;
-        pointer-events: none;
-      }
-      .small {
-        font-size: 11px;
-        opacity: 0.72;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="app">
-      <aside class="panel">
-        <h1>Einzelgrab 3D-Konfigurator (Demo)</h1>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Einzelgrab 3D-Konfigurator (Demo)</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #0b0f14;
+      color: #e9eef6;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .app {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      height: 100vh;
+    }
+    .panel {
+      padding: 14px;
+      border-right: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      overflow: auto;
+    }
+    .panel h1 {
+      font-size: 16px;
+      margin: 0 0 10px 0;
+      letter-spacing: 0.2px;
+    }
+    .card {
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .card h2 {
+      font-size: 13px;
+      margin: 0 0 10px 0;
+      opacity: 0.9;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      opacity: 0.85;
+      margin: 10px 0 6px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.35);
+      color: #e9eef6;
+      outline: none;
+    }
+    input::placeholder { color: rgba(233,238,246,0.45); }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .btnrow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    button {
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06);
+      transition: transform .05s ease;
+    }
+    button:active { transform: translateY(1px); }
+    .hint {
+      font-size: 12px;
+      opacity: 0.75;
+      line-height: 1.35;
+      margin-top: 8px;
+    }
+    .canvasWrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    #c {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .badge {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.35);
+      font-size: 12px;
+      opacity: 0.9;
+      user-select: none;
+      pointer-events: none;
+    }
+    .small {
+      font-size: 11px;
+      opacity: 0.72;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <h1>Einzelgrab 3D-Konfigurator (Demo)</h1>
 
-        <div class="card">
-          <h2>Texte (werden auf den Stein gerendert)</h2>
-          <label>Vorname</label>
-          <input id="firstName" placeholder="z.B. Anna" value="Anna" />
+      <div class="card">
+        <h2>Texte (werden auf den Stein gerendert)</h2>
+        <label>Vorname</label>
+        <input id="firstName" placeholder="z.B. Anna" value="Anna" />
 
-          <label>Nachname</label>
-          <input
-            id="lastName"
-            placeholder="z.B. Mustermann"
-            value="Mustermann"
-          />
+        <label>Nachname</label>
+        <input id="lastName" placeholder="z.B. Mustermann" value="Mustermann" />
 
-          <label>Sterbedatum</label>
-          <input id="deathDate" type="date" />
+        <label>Sterbedatum</label>
+        <input id="deathDate" type="date" />
 
-          <label>Datumsformat</label>
-          <select id="dateFormat">
-            <option value="dd.mm.yyyy" selected>TT.MM.JJJJ</option>
-            <option value="dd.mm.yy">TT.MM.JJ</option>
-            <option value="yyyy-mm-dd">JJJJ-MM-TT</option>
-          </select>
+        <label>Datumsformat</label>
+        <select id="dateFormat">
+          <option value="dd.mm.yyyy" selected>TT.MM.JJJJ</option>
+          <option value="dd.mm.yy">TT.MM.JJ</option>
+          <option value="yyyy-mm-dd">JJJJ-MM-TT</option>
+        </select>
 
-          <label>Schrift</label>
-          <select id="fontFamily">
-            <option value="serif" selected>Serif</option>
-            <option value="sans-serif">Sans</option>
-            <option value="monospace">Mono</option>
-          </select>
+        <label>Schrift</label>
+        <select id="fontFamily">
+          <option value="serif" selected>Serif</option>
+          <option value="sans-serif">Sans</option>
+          <option value="monospace">Mono</option>
+        </select>
 
-          <label>Ausrichtung</label>
-          <select id="align">
-            <option value="center" selected>zentriert</option>
-            <option value="left">links</option>
-            <option value="right">rechts</option>
-          </select>
+        <label>Ausrichtung</label>
+        <select id="align">
+          <option value="center" selected>zentriert</option>
+          <option value="left">links</option>
+          <option value="right">rechts</option>
+        </select>
 
-          <div class="row">
-            <div>
-              <label>Zeilenabstand</label>
-              <input
-                id="lineGap"
-                type="number"
-                min="0"
-                max="60"
-                step="1"
-                value="12"
-              />
-            </div>
-            <div>
-              <label>Innenrand</label>
-              <input
-                id="padding"
-                type="number"
-                min="0"
-                max="80"
-                step="1"
-                value="34"
-              />
-            </div>
+        <div class="row">
+          <div>
+            <label>Zeilenabstand</label>
+            <input id="lineGap" type="number" min="0" max="60" step="1" value="12" />
           </div>
-
-          <div class="hint">
-            ✅ Text ist <b>nicht</b> über dem Modell (kein Overlay), sondern als
-            <b>Textur</b> auf der Stein-Frontfläche. Der Text wird automatisch
-            <b>kleiner/umgebrochen</b>, bis er in die Fläche passt.
+          <div>
+            <label>Innenrand</label>
+            <input id="padding" type="number" min="0" max="80" step="1" value="34" />
           </div>
         </div>
 
-        <div class="card">
-          <h2>Stein / Form</h2>
+        <div class="hint">
+          ✅ Text ist <b>nicht</b> über dem Modell (kein Overlay), sondern als <b>Textur</b> auf der Stein-Frontfläche.  
+          Der Text wird automatisch <b>kleiner/umgebrochen</b>, bis er in die Fläche passt.
+        </div>
+      </div>
 
-          <label>Steinfarbe</label>
-          <select id="stoneColor">
-            <option value="#2d3440">Schwarz (Granit)</option>
-            <option value="#30353c">Dunkelgrau</option>
-            <option value="#6b6f76">Hellgrau</option>
-            <option value="#c7c1b8" selected>Marmor hell</option>
-          </select>
+      <div class="card">
+        <h2>Stein / Form</h2>
 
-          <label>Oberfläche</label>
-          <select id="finish">
-            <option value="polished" selected>poliert</option>
-            <option value="matte">matt</option>
-          </select>
+        <label>Steinfarbe</label>
+        <select id="stoneColor">
+          <option value="#1c1f24" selected>Schwarz (Granit)</option>
+          <option value="#30353c">Dunkelgrau</option>
+          <option value="#6b6f76">Hellgrau</option>
+          <option value="#c7c1b8">Marmor hell</option>
+        </select>
 
-          <label>Kopfform</label>
-          <select id="headShape">
-            <option value="rect" selected>rechteckig</option>
-            <option value="arch">bogen</option>
-          </select>
+        <label>Oberfläche</label>
+        <select id="finish">
+          <option value="polished" selected>poliert</option>
+          <option value="matte">matt</option>
+        </select>
 
-          <div class="row">
-            <div>
-              <label>Breite (cm)</label>
-              <input
-                id="w"
-                type="number"
-                min="60"
-                max="140"
-                step="1"
-                value="100"
-              />
-            </div>
-            <div>
-              <label>Höhe (cm)</label>
-              <input
-                id="h"
-                type="number"
-                min="70"
-                max="160"
-                step="1"
-                value="110"
-              />
-            </div>
+        <label>Kopfform</label>
+        <select id="headShape">
+          <option value="rect" selected>rechteckig</option>
+          <option value="arch">bogen</option>
+        </select>
+
+        <div class="row">
+          <div>
+            <label>Breite (cm)</label>
+            <input id="w" type="number" min="60" max="140" step="1" value="100" />
           </div>
-
-          <div class="row">
-            <div>
-              <label>Dicke (cm)</label>
-              <input
-                id="t"
-                type="number"
-                min="6"
-                max="30"
-                step="1"
-                value="12"
-              />
-            </div>
-            <div>
-              <label>Sockel (cm)</label>
-              <input
-                id="baseH"
-                type="number"
-                min="10"
-                max="40"
-                step="1"
-                value="18"
-              />
-            </div>
+          <div>
+            <label>Höhe (cm)</label>
+            <input id="h" type="number" min="70" max="160" step="1" value="110" />
           </div>
         </div>
 
-        <div class="card">
-          <h2>Aktionen</h2>
-          <div class="btnrow">
-            <button id="btnScreenshot">Screenshot (PNG)</button>
-            <button id="btnCopyLink">Link kopieren</button>
+        <div class="row">
+          <div>
+            <label>Dicke (cm)</label>
+            <input id="t" type="number" min="6" max="30" step="1" value="12" />
           </div>
-          <div class="btnrow" style="margin-top: 8px">
-            <button id="btnReset" style="grid-column: span 2">
-              Auf Ausgangswerte zurücksetzen
-            </button>
-          </div>
-          <div class="hint small">
-            Tipp: Wenn du das auf GitHub Pages hostest, kannst du den Link mit
-            Konfiguration teilen.
+          <div>
+            <label>Sockel (cm)</label>
+            <input id="baseH" type="number" min="10" max="40" step="1" value="18" />
           </div>
         </div>
-      </aside>
+      </div>
 
-      <main class="canvasWrap">
-        <canvas id="c"></canvas>
-        <div class="badge">
-          Maus: drehen • Shift+Maus: schieben • Scroll: zoomen
+      <div class="card">
+        <h2>Aktionen</h2>
+        <div class="btnrow">
+          <button id="btnScreenshot">Screenshot (PNG)</button>
+          <button id="btnCopyLink">Link kopieren</button>
         </div>
-      </main>
-    </div>
+        <div class="hint small">
+          Tipp: Wenn du das auf GitHub Pages hostest, kannst du den Link mit Konfiguration teilen.
+        </div>
+      </div>
+    </aside>
 
-    <div
-      id="status"
-      class="badge"
-      style="right: 12px; left: auto; bottom: 12px"
-    >
-      Lade 3D…
-    </div>
+    <main class="canvasWrap">
+      <canvas id="c"></canvas>
+      <div class="badge">Maus: drehen • Shift+Maus: schieben • Scroll: zoomen</div>
+    </main>
+  </div>
 
-    <script type="module">
-      (async () => {
-        const statusEl = document.getElementById("status");
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js';
 
-        const setStatus = (text, tone = "info", persist = true) => {
-          if (!statusEl) return;
-          statusEl.textContent = text;
-          statusEl.style.display = "block";
-          if (tone === "error") {
-            statusEl.style.background = "rgba(255,59,48,0.2)";
-            statusEl.style.borderColor = "rgba(255,59,48,0.35)";
-            statusEl.style.color = "#1f0f0f";
-          } else {
-            statusEl.style.background = "rgba(255,255,255,0.92)";
-            statusEl.style.borderColor = "rgba(15,23,42,0.18)";
-            statusEl.style.color = "#1f2933";
-          }
-          if (!persist) {
-            setTimeout(() => (statusEl.style.display = "none"), 1800);
-          }
-        };
+    // ----------------------------
+    // Helpers
+    // ----------------------------
+    const $ = (id) => document.getElementById(id);
 
-        const supportsWebGL = () => {
-          try {
-            const canvas = document.createElement("canvas");
-            return !!(
-              canvas.getContext("webgl2") || canvas.getContext("webgl")
-            );
-          } catch {
-            return false;
-          }
-        };
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
-        // Dynamische Imports erlauben uns, einen verständlichen Fehler zu zeigen,
-        // falls die CDN-Dateien (Three.js) blockiert oder offline sind.
-        async function loadThree() {
-          try {
-            const THREE = await import(
-              "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js"
-            );
-            const { OrbitControls } = await import(
-              "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js"
-            );
-            return { THREE, OrbitControls };
-          } catch (err) {
-            console.error("Konnte Three.js nicht laden", err);
-            setStatus(
-              "3D konnte nicht geladen werden (bitte Internet prüfen)",
-              "error",
-              true,
-            );
-            throw err;
-          }
-        }
+    function hexToThreeColor(hex){
+      return new THREE.Color(hex);
+    }
 
-        if (!supportsWebGL()) {
-          setStatus(
-            "WebGL wird von diesem Browser/Gerät nicht unterstützt.",
-            "error",
-            true,
-          );
-          return;
-        }
+    function formatDateISOTo(d, fmt){
+      // input: "YYYY-MM-DD" (from <input type="date">)
+      if(!d) return '';
+      if(fmt === 'yyyy-mm-dd') return d;
+      const [yyyy, mm, dd] = d.split('-');
+      if(fmt === 'dd.mm.yy') return `${dd}.${mm}.${yyyy.slice(2)}`;
+      return `${dd}.${mm}.${yyyy}`;
+    }
 
-        const { THREE, OrbitControls } = await loadThree();
+    function wrapLine(ctx, text, maxWidth){
+      // greedy wrap by spaces; if no spaces, hard-split
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      if(words.length === 0) return [];
+      const lines = [];
+      let line = words[0];
 
-        // ----------------------------
-        // Helpers
-        // ----------------------------
-        const $ = (id) => document.getElementById(id);
-
-        function clamp(n, a, b) {
-          return Math.max(a, Math.min(b, n));
-        }
-
-        function toNumber(value, fallback) {
-          const n = Number(value);
-          return Number.isFinite(n) ? n : fallback;
-        }
-
-        function hexToThreeColor(hex) {
-          return new THREE.Color(hex);
-        }
-
-        function formatDateISOTo(d, fmt) {
-          // input: "YYYY-MM-DD" (from <input type="date">)
-          if (!d) return "";
-          if (fmt === "yyyy-mm-dd") return d;
-          const [yyyy, mm, dd] = d.split("-");
-          if (fmt === "dd.mm.yy") return `${dd}.${mm}.${yyyy.slice(2)}`;
-          return `${dd}.${mm}.${yyyy}`;
-        }
-
-        function wrapLine(ctx, text, maxWidth) {
-          // greedy wrap by spaces; if no spaces, hard-split
-          const words = text.trim().split(/\s+/).filter(Boolean);
-          if (words.length === 0) return [];
-          const lines = [];
-          let line = words[0];
-
-          for (let i = 1; i < words.length; i++) {
-            const test = line + " " + words[i];
-            if (ctx.measureText(test).width <= maxWidth) {
-              line = test;
-            } else {
-              lines.push(line);
-              line = words[i];
-            }
-          }
+      for(let i=1; i<words.length; i++){
+        const test = line + ' ' + words[i];
+        if(ctx.measureText(test).width <= maxWidth) {
+          line = test;
+        } else {
           lines.push(line);
+          line = words[i];
+        }
+      }
+      lines.push(line);
 
-          // Hard-split any too-long single token
-          const finalLines = [];
-          for (const ln of lines) {
-            if (ctx.measureText(ln).width <= maxWidth) {
-              finalLines.push(ln);
+      // Hard-split any too-long single token
+      const finalLines = [];
+      for(const ln of lines){
+        if(ctx.measureText(ln).width <= maxWidth){
+          finalLines.push(ln);
+        } else {
+          // split char-by-char
+          let acc = '';
+          for(const ch of ln){
+            const test = acc + ch;
+            if(ctx.measureText(test).width <= maxWidth){
+              acc = test;
             } else {
-              // split char-by-char
-              let acc = "";
-              for (const ch of ln) {
-                const test = acc + ch;
-                if (ctx.measureText(test).width <= maxWidth) {
-                  acc = test;
-                } else {
-                  if (acc) finalLines.push(acc);
-                  acc = ch;
-                }
-              }
-              if (acc) finalLines.push(acc);
+              if(acc) finalLines.push(acc);
+              acc = ch;
             }
           }
-          return finalLines;
+          if(acc) finalLines.push(acc);
         }
+      }
+      return finalLines;
+    }
 
-        // Fit multiple lines into a box by decreasing font size until it fits.
-        function fitTextIntoBox(
-          ctx,
-          lines,
-          boxW,
-          boxH,
-          lineGap,
-          minSize = 18,
-          maxSize = 180,
-        ) {
-          let size = maxSize;
-          while (size >= minSize) {
-            ctx.font = `600 ${size}px ${state.fontFamily}`;
-            // compute wrapped lines (some lines can be long)
-            const wrapped = [];
-            for (const l of lines) {
-              wrapped.push(...wrapLine(ctx, l, boxW));
-            }
-            // measure height
-            const lineH = size * 1.05;
-            const totalH =
-              wrapped.length * lineH +
-              Math.max(0, wrapped.length - 1) * lineGap;
-            // measure width
-            let okW = true;
-            for (const wl of wrapped) {
-              if (ctx.measureText(wl).width > boxW) {
-                okW = false;
-                break;
-              }
-            }
-            if (okW && totalH <= boxH) {
-              return { fontSize: size, wrapped };
-            }
-            size -= 2;
-          }
-          // fallback
-          ctx.font = `600 ${minSize}px ${state.fontFamily}`;
-          const wrapped = [];
-          for (const l of lines) {
-            wrapped.push(...wrapLine(ctx, l, boxW));
-          }
-          return { fontSize: minSize, wrapped };
+    // Fit multiple lines into a box by decreasing font size until it fits.
+    function fitTextIntoBox(ctx, lines, boxW, boxH, lineGap, minSize=18, maxSize=180){
+      let size = maxSize;
+      while(size >= minSize){
+        ctx.font = `600 ${size}px ${state.fontFamily}`;
+        // compute wrapped lines (some lines can be long)
+        const wrapped = [];
+        for(const l of lines){
+          wrapped.push(...wrapLine(ctx, l, boxW));
         }
+        // measure height
+        const lineH = size * 1.05;
+        const totalH = wrapped.length * lineH + Math.max(0, wrapped.length - 1) * lineGap;
+        // measure width
+        let okW = true;
+        for(const wl of wrapped){
+          if(ctx.measureText(wl).width > boxW){ okW = false; break; }
+        }
+        if(okW && totalH <= boxH){
+          return { fontSize: size, wrapped };
+        }
+        size -= 2;
+      }
+      // fallback
+      ctx.font = `600 ${minSize}px ${state.fontFamily}`;
+      const wrapped = [];
+      for(const l of lines){
+        wrapped.push(...wrapLine(ctx, l, boxW));
+      }
+      return { fontSize: minSize, wrapped };
+    }
 
-        // ----------------------------
-        // State (Config)
-        // ----------------------------
-        const defaultState = {
-          firstName: "Anna",
-          lastName: "Mustermann",
-          deathDate: "",
-          dateFormat: "dd.mm.yyyy",
-          fontFamily: "serif",
-          align: "center",
-          lineGap: 12,
-          padding: 34,
+    // ----------------------------
+    // State (Config)
+    // ----------------------------
+    const state = {
+      firstName: 'Anna',
+      lastName: 'Mustermann',
+      deathDate: '',
+      dateFormat: 'dd.mm.yyyy',
+      fontFamily: 'serif',
+      align: 'center',
+      lineGap: 12,
+      padding: 34,
 
-          stoneColor: "#c7c1b8",
-          finish: "polished",
-          headShape: "rect",
+      stoneColor: '#1c1f24',
+      finish: 'polished',
+      headShape: 'rect',
 
-          wCm: 100,
-          hCm: 110,
-          tCm: 12,
-          baseHCm: 18,
-        };
+      wCm: 100,
+      hCm: 110,
+      tCm: 12,
+      baseHCm: 18,
+    };
 
-        const state = { ...defaultState };
+    // ----------------------------
+    // Three.js Setup
+    // ----------------------------
+    const canvas = $('c');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-        // ----------------------------
-        // Three.js Setup
-        // ----------------------------
-        const canvas = $("c");
-        const statusEl = $("status");
-        const renderer = new THREE.WebGLRenderer({
-          canvas,
-          antialias: true,
-          alpha: false,
-          preserveDrawingBuffer: true,
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0f14);
+
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 50);
+    camera.position.set(1.8, 1.2, 2.2);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.target.set(0, 0.65, 0);
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    const key = new THREE.DirectionalLight(0xffffff, 1.2);
+    key.position.set(3, 4, 2);
+    scene.add(key);
+
+    const rim = new THREE.DirectionalLight(0xffffff, 0.6);
+    rim.position.set(-3, 2, -2);
+    scene.add(rim);
+
+    // Ground
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(12, 12),
+      new THREE.MeshStandardMaterial({ color: 0x0a0d12, roughness: 1.0, metalness: 0.0 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = 0;
+    scene.add(ground);
+
+    // Group for model
+    const modelGroup = new THREE.Group();
+    scene.add(modelGroup);
+
+    // ----------------------------
+    // Engraving texture (canvas -> texture)
+    // ----------------------------
+    const texCanvas = document.createElement('canvas');
+    texCanvas.width = 1024;
+    texCanvas.height = 1024;
+    const texCtx = texCanvas.getContext('2d');
+
+    const engravingTexture = new THREE.CanvasTexture(texCanvas);
+    engravingTexture.colorSpace = THREE.SRGBColorSpace;
+    engravingTexture.anisotropy = 4;
+    engravingTexture.wrapS = THREE.ClampToEdgeWrapping;
+    engravingTexture.wrapT = THREE.ClampToEdgeWrapping;
+
+    function redrawEngraving(){
+      const W = texCanvas.width;
+      const H = texCanvas.height;
+
+      // white background so material color stays visible (map * color)
+      texCtx.clearRect(0, 0, W, H);
+      texCtx.fillStyle = '#ffffff';
+      texCtx.fillRect(0, 0, W, H);
+
+      // Define "safe box" for text so it NEVER goes out of bounds:
+      const pad = clamp(Number(state.padding) || 0, 0, 160);
+      const boxX = pad;
+      const boxY = pad;
+      const boxW = W - pad * 2;
+      const boxH = H - pad * 2;
+
+      // optional subtle frame (debug look)
+      // texCtx.strokeStyle = 'rgba(0,0,0,0.08)';
+      // texCtx.strokeRect(boxX, boxY, boxW, boxH);
+
+      // Compose lines
+      const nameLine = `${(state.firstName || '').trim()} ${(state.lastName || '').trim()}`.trim();
+      const dateLine = formatDateISOTo(state.deathDate, state.dateFormat);
+      const lines = [];
+      if(nameLine) lines.push(nameLine);
+      if(dateLine) lines.push(dateLine);
+
+      // If empty, show nothing (still within bounds)
+      if(lines.length === 0){
+        engravingTexture.needsUpdate = true;
+        return;
+      }
+
+      const lineGap = clamp(Number(state.lineGap) || 0, 0, 80);
+
+      // Fit + wrap
+      texCtx.textBaseline = 'middle';
+      texCtx.textAlign = state.align;
+
+      const fit = fitTextIntoBox(texCtx, lines, boxW, boxH, lineGap, 18, 180);
+      const fontSize = fit.fontSize;
+      const wrapped = fit.wrapped;
+
+      texCtx.font = `600 ${fontSize}px ${state.fontFamily}`;
+
+      // Compute layout position
+      const lineH = fontSize * 1.05;
+      const totalH = wrapped.length * lineH + Math.max(0, wrapped.length - 1) * lineGap;
+
+      let x;
+      if(state.align === 'left') x = boxX;
+      else if(state.align === 'right') x = boxX + boxW;
+      else x = boxX + boxW / 2;
+
+      let y = boxY + (boxH - totalH) / 2 + lineH / 2;
+
+      // Draw "engraving" (dark, but still subtle)
+      // IMPORTANT: draw ONLY inside the safe box. (We already ensured fit, but we also clip.)
+      texCtx.save();
+      texCtx.beginPath();
+      texCtx.rect(boxX, boxY, boxW, boxH);
+      texCtx.clip();
+
+      for(const l of wrapped){
+        // shadow for depth
+        texCtx.fillStyle = 'rgba(0,0,0,0.55)';
+        texCtx.fillText(l, x + 2, y + 2);
+
+        // main text
+        texCtx.fillStyle = 'rgba(0,0,0,0.75)';
+        texCtx.fillText(l, x, y);
+
+        y += lineH + lineGap;
+      }
+
+      texCtx.restore();
+
+      engravingTexture.needsUpdate = true;
+    }
+
+    // ----------------------------
+    // Build gravestone geometry (procedural demo)
+    // ----------------------------
+    let baseMesh, headMesh;
+
+    function buildModel(){
+      modelGroup.clear();
+
+      const w = clamp(state.wCm, 60, 140) / 100;    // meters
+      const h = clamp(state.hCm, 70, 160) / 100;
+      const t = clamp(state.tCm, 6, 30) / 100;
+      const baseH = clamp(state.baseHCm, 10, 40) / 100;
+
+      const stoneCol = hexToThreeColor(state.stoneColor);
+
+      const polished = state.finish === 'polished';
+      const roughness = polished ? 0.18 : 0.75;
+      const metalness = polished ? 0.08 : 0.02;
+
+      // Base
+      const baseGeo = new THREE.BoxGeometry(w * 1.05, baseH, t * 1.25);
+      const baseMat = new THREE.MeshStandardMaterial({
+        color: stoneCol,
+        roughness: roughness + 0.05,
+        metalness
+      });
+      baseMesh = new THREE.Mesh(baseGeo, baseMat);
+      baseMesh.position.y = baseH / 2;
+      baseMesh.castShadow = true;
+      baseMesh.receiveShadow = true;
+      modelGroup.add(baseMesh);
+
+      // Headstone geometry (rectangle or arch)
+      let headGeo;
+      if(state.headShape === 'arch'){
+        // Simple arch: box + cylinder cap via BufferGeometry merge-ish (cheap way: use shape + extrude)
+        const shape = new THREE.Shape();
+        const r = (w * 0.52) / 2;
+        const left = -w * 0.52 / 2;
+        const right = w * 0.52 / 2;
+        const bottom = 0;
+        const rectH = h * 0.78;
+
+        shape.moveTo(left, bottom);
+        shape.lineTo(left, rectH);
+        shape.absarc(0, rectH, r, Math.PI, 0, false);
+        shape.lineTo(right, bottom);
+        shape.lineTo(left, bottom);
+
+        const extrude = new THREE.ExtrudeGeometry(shape, {
+          depth: t,
+          bevelEnabled: false,
+          steps: 1
         });
-        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        extrude.center(); // center around origin
+        headGeo = extrude;
+      } else {
+        headGeo = new THREE.BoxGeometry(w * 0.52, h, t);
+      }
 
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf2f5fb);
+      // Headstone materials:
+      // For BoxGeometry we can assign 6 materials (front gets engraving map).
+      // For ExtrudeGeometry (arch) we just use one material with map (works on UVs, but may be imperfect).
+      const frontMat = new THREE.MeshStandardMaterial({
+        color: stoneCol,
+        roughness,
+        metalness,
+        map: engravingTexture
+      });
 
-        const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 50);
-        camera.position.set(1.8, 1.35, 2.35);
+      const stoneMat = new THREE.MeshStandardMaterial({
+        color: stoneCol,
+        roughness,
+        metalness
+      });
 
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.06;
-        controls.target.set(0, 0.65, 0);
+      if(headGeo.type === 'BoxGeometry'){
+        // Face order in BoxGeometry groups: +x, -x, +y, -y, +z(front), -z(back)
+        const mats = [stoneMat, stoneMat, stoneMat, stoneMat, frontMat, stoneMat];
+        headMesh = new THREE.Mesh(headGeo, mats);
+      } else {
+        // Arch: single material, still with engraving map
+        headMesh = new THREE.Mesh(headGeo, frontMat);
+      }
 
-        // Lights
-        scene.add(new THREE.HemisphereLight(0xcad7ff, 0x0a0c10, 0.35));
-        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-        const key = new THREE.DirectionalLight(0xffffff, 1.35);
-        key.position.set(3, 4, 2);
-        scene.add(key);
+      headMesh.position.y = baseH + h / 2;
+      headMesh.castShadow = true;
+      headMesh.receiveShadow = true;
+      modelGroup.add(headMesh);
 
-        const rim = new THREE.DirectionalLight(0xffffff, 0.75);
-        rim.position.set(-3, 2.4, -2);
-        scene.add(rim);
+      // Slight bevel feel via small edge helper (visual cue)
+      const edge = new THREE.LineSegments(
+        new THREE.EdgesGeometry(headMesh.geometry, 20),
+        new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.08 })
+      );
+      edge.position.copy(headMesh.position);
+      edge.rotation.copy(headMesh.rotation);
+      modelGroup.add(edge);
 
-        // Ground
-        const ground = new THREE.Mesh(
-          new THREE.PlaneGeometry(12, 12),
-          new THREE.MeshStandardMaterial({
-            color: 0xe6edf5,
-            roughness: 1.0,
-            metalness: 0.0,
-          }),
-        );
-        ground.rotation.x = -Math.PI / 2;
-        ground.position.y = 0;
-        scene.add(ground);
+      // Keep orbit target nice
+      controls.target.set(0, baseH + h * 0.55, 0);
+      controls.update();
+    }
 
-        // Group for model
-        const modelGroup = new THREE.Group();
-        scene.add(modelGroup);
+    // ----------------------------
+    // UI bindings
+    // ----------------------------
+    function readUI(){
+      state.firstName = $('firstName').value;
+      state.lastName = $('lastName').value;
+      state.deathDate = $('deathDate').value;
+      state.dateFormat = $('dateFormat').value;
+      state.fontFamily = $('fontFamily').value;
+      state.align = $('align').value;
+      state.lineGap = Number($('lineGap').value);
+      state.padding = Number($('padding').value);
 
-        // A subtle grid to anchor the scene visually
-        const grid = new THREE.GridHelper(6, 24, 0xa3b3d4, 0xc7d2e8);
-        grid.position.y = -0.001;
-        grid.material.opacity = 0.2;
-        grid.material.transparent = true;
-        scene.add(grid);
+      state.stoneColor = $('stoneColor').value;
+      state.finish = $('finish').value;
+      state.headShape = $('headShape').value;
 
-        // ----------------------------
-        // Engraving texture (canvas -> texture)
-        // ----------------------------
-        const texCanvas = document.createElement("canvas");
-        texCanvas.width = 1024;
-        texCanvas.height = 1024;
-        const texCtx = texCanvas.getContext("2d");
+      state.wCm = Number($('w').value);
+      state.hCm = Number($('h').value);
+      state.tCm = Number($('t').value);
+      state.baseHCm = Number($('baseH').value);
+    }
 
-        const engravingTexture = new THREE.CanvasTexture(texCanvas);
-        engravingTexture.colorSpace = THREE.SRGBColorSpace;
-        engravingTexture.anisotropy = 4;
-        engravingTexture.wrapS = THREE.ClampToEdgeWrapping;
-        engravingTexture.wrapT = THREE.ClampToEdgeWrapping;
+    function applyAll(){
+      readUI();
+      redrawEngraving();
+      buildModel();
+      persistToHash();
+    }
 
-        function redrawEngraving() {
-          const W = texCanvas.width;
-          const H = texCanvas.height;
+    // Set default date = today (optional)
+    const todayISO = new Date().toISOString().slice(0,10);
+    $('deathDate').value = todayISO;
+    state.deathDate = todayISO;
 
-          // white background so material color stays visible (map * color)
-          texCtx.clearRect(0, 0, W, H);
-          texCtx.fillStyle = "#ffffff";
-          texCtx.fillRect(0, 0, W, H);
+    // Attach change listeners
+    [
+      'firstName','lastName','deathDate','dateFormat',
+      'fontFamily','align','lineGap','padding',
+      'stoneColor','finish','headShape','w','h','t','baseH'
+    ].forEach(id => {
+      $(id).addEventListener('input', applyAll);
+      $(id).addEventListener('change', applyAll);
+    });
 
-          // Define "safe box" for text so it NEVER goes out of bounds:
-          const pad = clamp(Number(state.padding) || 0, 0, 160);
-          const boxX = pad;
-          const boxY = pad;
-          const boxW = W - pad * 2;
-          const boxH = H - pad * 2;
+    // ----------------------------
+    // Share via URL hash
+    // ----------------------------
+    function persistToHash(){
+      const cfg = {
+        firstName: state.firstName,
+        lastName: state.lastName,
+        deathDate: state.deathDate,
+        dateFormat: state.dateFormat,
+        fontFamily: state.fontFamily,
+        align: state.align,
+        lineGap: state.lineGap,
+        padding: state.padding,
+        stoneColor: state.stoneColor,
+        finish: state.finish,
+        headShape: state.headShape,
+        wCm: state.wCm,
+        hCm: state.hCm,
+        tCm: state.tCm,
+        baseHCm: state.baseHCm
+      };
+      const json = JSON.stringify(cfg);
+      const b64 = btoa(unescape(encodeURIComponent(json)));
+      history.replaceState(null, '', '#' + b64);
+    }
 
-          // optional subtle frame (debug look)
-          // texCtx.strokeStyle = 'rgba(0,0,0,0.08)';
-          // texCtx.strokeRect(boxX, boxY, boxW, boxH);
+    function loadFromHash(){
+      const hash = location.hash.replace(/^#/, '');
+      if(!hash) return;
+      try{
+        const json = decodeURIComponent(escape(atob(hash)));
+        const cfg = JSON.parse(json);
 
-          // Compose lines
-          const nameLine =
-            `${(state.firstName || "").trim()} ${(state.lastName || "").trim()}`.trim();
-          const dateLine = formatDateISOTo(state.deathDate, state.dateFormat);
-          const lines = [];
-          if (nameLine) lines.push(nameLine);
-          if (dateLine) lines.push(dateLine);
+        // write to UI if present
+        if(cfg.firstName != null) $('firstName').value = cfg.firstName;
+        if(cfg.lastName != null) $('lastName').value = cfg.lastName;
+        if(cfg.deathDate != null) $('deathDate').value = cfg.deathDate;
+        if(cfg.dateFormat != null) $('dateFormat').value = cfg.dateFormat;
+        if(cfg.fontFamily != null) $('fontFamily').value = cfg.fontFamily;
+        if(cfg.align != null) $('align').value = cfg.align;
+        if(cfg.lineGap != null) $('lineGap').value = cfg.lineGap;
+        if(cfg.padding != null) $('padding').value = cfg.padding;
 
-          // If empty, show nothing (still within bounds)
-          if (lines.length === 0) {
-            engravingTexture.needsUpdate = true;
-            return;
-          }
+        if(cfg.stoneColor != null) $('stoneColor').value = cfg.stoneColor;
+        if(cfg.finish != null) $('finish').value = cfg.finish;
+        if(cfg.headShape != null) $('headShape').value = cfg.headShape;
 
-          const lineGap = clamp(Number(state.lineGap) || 0, 0, 80);
+        if(cfg.wCm != null) $('w').value = cfg.wCm;
+        if(cfg.hCm != null) $('h').value = cfg.hCm;
+        if(cfg.tCm != null) $('t').value = cfg.tCm;
+        if(cfg.baseHCm != null) $('baseH').value = cfg.baseHCm;
+      } catch(e){
+        console.warn('Hash konnte nicht geladen werden:', e);
+      }
+    }
 
-          // Fit + wrap
-          texCtx.textBaseline = "middle";
-          texCtx.textAlign = state.align;
+    $('btnCopyLink').addEventListener('click', async () => {
+      try{
+        persistToHash();
+        await navigator.clipboard.writeText(location.href);
+        $('btnCopyLink').textContent = 'Kopiert ✅';
+        setTimeout(() => $('btnCopyLink').textContent = 'Link kopieren', 900);
+      } catch {
+        alert('Konnte nicht kopieren. (Browser-Clipboard blockiert)');
+      }
+    });
 
-          const fit = fitTextIntoBox(
-            texCtx,
-            lines,
-            boxW,
-            boxH,
-            lineGap,
-            18,
-            180,
-          );
-          const fontSize = fit.fontSize;
-          const wrapped = fit.wrapped;
+    // Screenshot
+    $('btnScreenshot').addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.download = 'einzelgrab-konfigurator.png';
+      a.href = renderer.domElement.toDataURL('image/png');
+      a.click();
+    });
 
-          texCtx.font = `600 ${fontSize}px ${state.fontFamily}`;
+    // ----------------------------
+    // Resize + Render loop
+    // ----------------------------
+    function resize(){
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
 
-          // Compute layout position
-          const lineH = fontSize * 1.05;
-          const totalH =
-            wrapped.length * lineH + Math.max(0, wrapped.length - 1) * lineGap;
+    function tick(){
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
 
-          let x;
-          if (state.align === "left") x = boxX;
-          else if (state.align === "right") x = boxX + boxW;
-          else x = boxX + boxW / 2;
-
-          let y = boxY + (boxH - totalH) / 2 + lineH / 2;
-
-          // Draw "engraving" (dark, but still subtle)
-          // IMPORTANT: draw ONLY inside the safe box. (We already ensured fit, but we also clip.)
-          texCtx.save();
-          texCtx.beginPath();
-          texCtx.rect(boxX, boxY, boxW, boxH);
-          texCtx.clip();
-
-          for (const l of wrapped) {
-            // shadow for depth
-            texCtx.fillStyle = "rgba(0,0,0,0.55)";
-            texCtx.fillText(l, x + 2, y + 2);
-
-            // main text
-            texCtx.fillStyle = "rgba(0,0,0,0.75)";
-            texCtx.fillText(l, x, y);
-
-            y += lineH + lineGap;
-          }
-
-          texCtx.restore();
-
-          engravingTexture.needsUpdate = true;
-        }
-
-        // ----------------------------
-        // Build gravestone geometry (procedural demo)
-        // ----------------------------
-        let baseMesh, headMesh;
-
-        function buildModel() {
-          modelGroup.clear();
-
-          const w = clamp(state.wCm || defaultState.wCm, 60, 140) / 100; // meters
-          const h = clamp(state.hCm || defaultState.hCm, 70, 160) / 100;
-          const t = clamp(state.tCm || defaultState.tCm, 6, 30) / 100;
-          const baseH =
-            clamp(state.baseHCm || defaultState.baseHCm, 10, 40) / 100;
-
-          const stoneCol = hexToThreeColor(state.stoneColor);
-
-          const polished = state.finish === "polished";
-          const roughness = polished ? 0.18 : 0.75;
-          const metalness = polished ? 0.08 : 0.02;
-
-          // Base
-          const baseGeo = new THREE.BoxGeometry(w * 1.05, baseH, t * 1.25);
-          const baseMat = new THREE.MeshStandardMaterial({
-            color: stoneCol,
-            roughness: roughness + 0.05,
-            metalness,
-          });
-          baseMesh = new THREE.Mesh(baseGeo, baseMat);
-          baseMesh.position.y = baseH / 2;
-          baseMesh.castShadow = true;
-          baseMesh.receiveShadow = true;
-          modelGroup.add(baseMesh);
-
-          // Headstone geometry (rectangle or arch)
-          let headGeo;
-          if (state.headShape === "arch") {
-            // Simple arch: box + cylinder cap via BufferGeometry merge-ish (cheap way: use shape + extrude)
-            const shape = new THREE.Shape();
-            const r = (w * 0.52) / 2;
-            const left = (-w * 0.52) / 2;
-            const right = (w * 0.52) / 2;
-            const bottom = 0;
-            const rectH = h * 0.78;
-
-            shape.moveTo(left, bottom);
-            shape.lineTo(left, rectH);
-            shape.absarc(0, rectH, r, Math.PI, 0, false);
-            shape.lineTo(right, bottom);
-            shape.lineTo(left, bottom);
-
-            const extrude = new THREE.ExtrudeGeometry(shape, {
-              depth: t,
-              bevelEnabled: false,
-              steps: 1,
-            });
-            extrude.center(); // center around origin
-            headGeo = extrude;
-          } else {
-            // Extremely einfache Demo-Geometrie: ein Quader als Kopfstein
-            headGeo = new THREE.BoxGeometry(w * 0.52, h, t);
-          }
-
-          // Headstone materials:
-          // For BoxGeometry we can assign 6 materials (front gets engraving map).
-          // For ExtrudeGeometry (arch) we just use one material with map (works on UVs, but may be imperfect).
-          const frontMat = new THREE.MeshStandardMaterial({
-            color: stoneCol,
-            roughness,
-            metalness,
-            map: engravingTexture,
-          });
-
-          const stoneMat = new THREE.MeshStandardMaterial({
-            color: stoneCol,
-            roughness,
-            metalness,
-          });
-
-          if (headGeo.type === "BoxGeometry") {
-            // Face order in BoxGeometry groups: +x, -x, +y, -y, +z(front), -z(back)
-            const mats = [
-              stoneMat,
-              stoneMat,
-              stoneMat,
-              stoneMat,
-              frontMat,
-              stoneMat,
-            ];
-            headMesh = new THREE.Mesh(headGeo, mats);
-          } else {
-            // Arch: single material, still with engraving map
-            headMesh = new THREE.Mesh(headGeo, frontMat);
-          }
-
-          headMesh.position.y = baseH + h / 2;
-          headMesh.castShadow = true;
-          headMesh.receiveShadow = true;
-          modelGroup.add(headMesh);
-
-          // Slight bevel feel via small edge helper (visual cue)
-          const edge = new THREE.LineSegments(
-            new THREE.EdgesGeometry(headMesh.geometry, 20),
-            new THREE.LineBasicMaterial({
-              color: 0xffffff,
-              transparent: true,
-              opacity: 0.08,
-            }),
-          );
-          edge.position.copy(headMesh.position);
-          edge.rotation.copy(headMesh.rotation);
-          modelGroup.add(edge);
-
-          // Keep orbit target nice
-          controls.target.set(0, baseH + h * 0.55, 0);
-          controls.update();
-        }
-
-        // ----------------------------
-        // UI bindings
-        // ----------------------------
-        function patchUI(cfg) {
-          if (cfg.firstName != null) $("firstName").value = cfg.firstName;
-          if (cfg.lastName != null) $("lastName").value = cfg.lastName;
-          if (cfg.deathDate != null) $("deathDate").value = cfg.deathDate;
-          if (cfg.dateFormat != null) $("dateFormat").value = cfg.dateFormat;
-          if (cfg.fontFamily != null) $("fontFamily").value = cfg.fontFamily;
-          if (cfg.align != null) $("align").value = cfg.align;
-          if (cfg.lineGap != null) $("lineGap").value = cfg.lineGap;
-          if (cfg.padding != null) $("padding").value = cfg.padding;
-
-          if (cfg.stoneColor != null) $("stoneColor").value = cfg.stoneColor;
-          if (cfg.finish != null) $("finish").value = cfg.finish;
-          if (cfg.headShape != null) $("headShape").value = cfg.headShape;
-
-          if (cfg.wCm != null) $("w").value = cfg.wCm;
-          if (cfg.hCm != null) $("h").value = cfg.hCm;
-          if (cfg.tCm != null) $("t").value = cfg.tCm;
-          if (cfg.baseHCm != null) $("baseH").value = cfg.baseHCm;
-        }
-
-        function readUI() {
-          state.firstName = $("firstName").value;
-          state.lastName = $("lastName").value;
-          state.deathDate = $("deathDate").value;
-          state.dateFormat = $("dateFormat").value;
-          state.fontFamily = $("fontFamily").value;
-          state.align = $("align").value;
-          state.lineGap = toNumber($("lineGap").value, defaultState.lineGap);
-          state.padding = toNumber($("padding").value, defaultState.padding);
-
-          state.stoneColor = $("stoneColor").value;
-          state.finish = $("finish").value;
-          state.headShape = $("headShape").value;
-
-          state.wCm = toNumber($("w").value, defaultState.wCm);
-          state.hCm = toNumber($("h").value, defaultState.hCm);
-          state.tCm = toNumber($("t").value, defaultState.tCm);
-          state.baseHCm = toNumber($("baseH").value, defaultState.baseHCm);
-        }
-
-        function applyAll() {
-          readUI();
-          redrawEngraving();
-          buildModel();
-          persistToHash();
-        }
-
-        // Set default date = today (optional)
-        const todayISO = new Date().toISOString().slice(0, 10);
-        patchUI({ deathDate: todayISO });
-        state.deathDate = todayISO;
-
-        // Attach change listeners
-        [
-          "firstName",
-          "lastName",
-          "deathDate",
-          "dateFormat",
-          "fontFamily",
-          "align",
-          "lineGap",
-          "padding",
-          "stoneColor",
-          "finish",
-          "headShape",
-          "w",
-          "h",
-          "t",
-          "baseH",
-        ].forEach((id) => {
-          $(id).addEventListener("input", applyAll);
-          $(id).addEventListener("change", applyAll);
-        });
-
-        // ----------------------------
-        // Share via URL hash
-        // ----------------------------
-        function persistToHash() {
-          const cfg = {
-            firstName: state.firstName,
-            lastName: state.lastName,
-            deathDate: state.deathDate,
-            dateFormat: state.dateFormat,
-            fontFamily: state.fontFamily,
-            align: state.align,
-            lineGap: state.lineGap,
-            padding: state.padding,
-            stoneColor: state.stoneColor,
-            finish: state.finish,
-            headShape: state.headShape,
-            wCm: state.wCm,
-            hCm: state.hCm,
-            tCm: state.tCm,
-            baseHCm: state.baseHCm,
-          };
-          const json = JSON.stringify(cfg);
-          const b64 = btoa(unescape(encodeURIComponent(json)));
-          history.replaceState(null, "", "#" + b64);
-        }
-
-        function loadFromHash() {
-          const hash = location.hash.replace(/^#/, "");
-          if (!hash) return;
-          try {
-            const json = decodeURIComponent(escape(atob(hash)));
-            const cfg = JSON.parse(json);
-
-            // write to UI if present
-            patchUI(cfg);
-          } catch (e) {
-            console.warn("Hash konnte nicht geladen werden:", e);
-          }
-        }
-
-        function resetToDefaults() {
-          location.hash = "";
-          patchUI({ ...defaultState, deathDate: todayISO });
-          applyAll();
-          setStatus("Auf Anfangszustand zurückgesetzt", "info", false);
-        }
-
-        $("btnReset").addEventListener("click", resetToDefaults);
-
-        $("btnCopyLink").addEventListener("click", async () => {
-          try {
-            persistToHash();
-            await navigator.clipboard.writeText(location.href);
-            $("btnCopyLink").textContent = "Kopiert ✅";
-            setTimeout(
-              () => ($("btnCopyLink").textContent = "Link kopieren"),
-              900,
-            );
-          } catch {
-            alert("Konnte nicht kopieren. (Browser-Clipboard blockiert)");
-          }
-        });
-
-        // Screenshot
-        $("btnScreenshot").addEventListener("click", () => {
-          const a = document.createElement("a");
-          a.download = "einzelgrab-konfigurator.png";
-          a.href = renderer.domElement.toDataURL("image/png");
-          a.click();
-        });
-
-        // ----------------------------
-        // Resize + Render loop
-        // ----------------------------
-        function resize() {
-          const w = canvas.clientWidth;
-          const h = canvas.clientHeight;
-          renderer.setSize(w, h, false);
-          camera.aspect = w / h;
-          camera.updateProjectionMatrix();
-        }
-
-        function tick() {
-          controls.update();
-          renderer.render(scene, camera);
-          requestAnimationFrame(tick);
-        }
-
-        // Init
-        loadFromHash();
-        applyAll();
-        resize();
-        if (statusEl) {
-          setStatus("3D bereit", "info", false);
-        }
-        window.addEventListener("resize", resize);
-        tick();
-      })();
-    </script>
-  </body>
+    // Init
+    loadFromHash();
+    applyAll();
+    resize();
+    window.addEventListener('resize', resize);
+    tick();
+  </script>
+</body>
 </html>
