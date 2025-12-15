@@ -281,6 +281,11 @@
             <button id="btnScreenshot">Screenshot (PNG)</button>
             <button id="btnCopyLink">Link kopieren</button>
           </div>
+          <div class="btnrow" style="margin-top: 8px">
+            <button id="btnReset" style="grid-column: span 2">
+              Auf Ausgangswerte zurücksetzen
+            </button>
+          </div>
           <div class="hint small">
             Tipp: Wenn du das auf GitHub Pages hostest, kannst du den Link mit
             Konfiguration teilen.
@@ -792,6 +797,26 @@
         // ----------------------------
         // UI bindings
         // ----------------------------
+        function patchUI(cfg) {
+          if (cfg.firstName != null) $("firstName").value = cfg.firstName;
+          if (cfg.lastName != null) $("lastName").value = cfg.lastName;
+          if (cfg.deathDate != null) $("deathDate").value = cfg.deathDate;
+          if (cfg.dateFormat != null) $("dateFormat").value = cfg.dateFormat;
+          if (cfg.fontFamily != null) $("fontFamily").value = cfg.fontFamily;
+          if (cfg.align != null) $("align").value = cfg.align;
+          if (cfg.lineGap != null) $("lineGap").value = cfg.lineGap;
+          if (cfg.padding != null) $("padding").value = cfg.padding;
+
+          if (cfg.stoneColor != null) $("stoneColor").value = cfg.stoneColor;
+          if (cfg.finish != null) $("finish").value = cfg.finish;
+          if (cfg.headShape != null) $("headShape").value = cfg.headShape;
+
+          if (cfg.wCm != null) $("w").value = cfg.wCm;
+          if (cfg.hCm != null) $("h").value = cfg.hCm;
+          if (cfg.tCm != null) $("t").value = cfg.tCm;
+          if (cfg.baseHCm != null) $("baseH").value = cfg.baseHCm;
+        }
+
         function readUI() {
           state.firstName = $("firstName").value;
           state.lastName = $("lastName").value;
@@ -821,7 +846,7 @@
 
         // Set default date = today (optional)
         const todayISO = new Date().toISOString().slice(0, 10);
-        $("deathDate").value = todayISO;
+        patchUI({ deathDate: todayISO });
         state.deathDate = todayISO;
 
         // Attach change listeners
@@ -880,27 +905,20 @@
             const cfg = JSON.parse(json);
 
             // write to UI if present
-            if (cfg.firstName != null) $("firstName").value = cfg.firstName;
-            if (cfg.lastName != null) $("lastName").value = cfg.lastName;
-            if (cfg.deathDate != null) $("deathDate").value = cfg.deathDate;
-            if (cfg.dateFormat != null) $("dateFormat").value = cfg.dateFormat;
-            if (cfg.fontFamily != null) $("fontFamily").value = cfg.fontFamily;
-            if (cfg.align != null) $("align").value = cfg.align;
-            if (cfg.lineGap != null) $("lineGap").value = cfg.lineGap;
-            if (cfg.padding != null) $("padding").value = cfg.padding;
-
-            if (cfg.stoneColor != null) $("stoneColor").value = cfg.stoneColor;
-            if (cfg.finish != null) $("finish").value = cfg.finish;
-            if (cfg.headShape != null) $("headShape").value = cfg.headShape;
-
-            if (cfg.wCm != null) $("w").value = cfg.wCm;
-            if (cfg.hCm != null) $("h").value = cfg.hCm;
-            if (cfg.tCm != null) $("t").value = cfg.tCm;
-            if (cfg.baseHCm != null) $("baseH").value = cfg.baseHCm;
+            patchUI(cfg);
           } catch (e) {
             console.warn("Hash konnte nicht geladen werden:", e);
           }
         }
+
+        function resetToDefaults() {
+          location.hash = "";
+          patchUI({ ...defaultState, deathDate: todayISO });
+          applyAll();
+          setStatus("Auf Anfangszustand zurückgesetzt", "info", false);
+        }
+
+        $("btnReset").addEventListener("click", resetToDefaults);
 
         $("btnCopyLink").addEventListener("click", async () => {
           try {
