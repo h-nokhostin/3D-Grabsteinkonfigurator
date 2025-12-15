@@ -3,6 +3,7 @@
 
 // Globale Variablen für Three.js Szene
 let scene, camera, renderer, controls;
+let ambientLight, directionalLight;
 let baseMesh, headstoneMesh, inscriptionPlane;
 
 // Inscription drawing
@@ -512,8 +513,10 @@ function createModelShapes(modelName) {
 
 // Aktuell ausgewählte Optionen
 let currentColor = materialColors['Indian Black'];
+let currentColorName = 'Indian Black';
 // Standardmodell zu Beginn (erstes aus der Liste)
 let currentShape = 'M001';
+let backgroundColor = '#f4f7fb';
 
 /**
  * Initialisiert die Three.js Szene, den Renderer und das Steuerungssystem.
@@ -524,6 +527,7 @@ function initScene() {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(new THREE.Color(backgroundColor));
 
     // Szene
     scene = new THREE.Scene();
@@ -533,11 +537,11 @@ function initScene() {
     camera.position.set(5, 5, 8);
 
     // Beleuchtung
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambient);
-    const directional = new THREE.DirectionalLight(0xffffff, 0.7);
-    directional.position.set(5, 10, 3);
-    scene.add(directional);
+    ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    directionalLight.position.set(5, 10, 3);
+    scene.add(directionalLight);
 
     // Orbit Controls
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -684,6 +688,7 @@ function updateHeadstone() {
             inscriptionPlane.position.set(centerX, centerY, frontZ + 0.01);
             headstoneMesh.add(inscriptionPlane);
             updateInscriptionCanvas();
+            refreshSummary();
         }, undefined, (error) => {
             console.error('Fehler beim Laden der GLB‑Datei', error);
         });
@@ -732,6 +737,7 @@ function updateHeadstone() {
     // Füge den Plane als Kind-Objekt hinzu
     headstoneMesh.add(inscriptionPlane);
     updateInscriptionCanvas();
+    refreshSummary();
 }
 
 /**
@@ -782,6 +788,7 @@ function updateInscriptionCanvas() {
     inscriptionCtx.fillText(`† ${deathDate}`, centerX, currentY);
     // Textur aktualisieren
     if (inscriptionTexture) inscriptionTexture.needsUpdate = true;
+    refreshSummary();
 }
 
 /**
@@ -796,22 +803,74 @@ function populateColorOptions() {
         div.title = name;
         div.style.backgroundColor = color;
         div.dataset.color = color;
+        div.dataset.name = name;
         div.addEventListener('click', () => {
             currentColor = color;
+            currentColorName = name;
             updateSelectedSwatch(div);
             updateHeadstone();
         });
         container.appendChild(div);
     });
-    // Markiere die erste als ausgewählt
-    if (container.firstChild) {
+    const defaultSwatch = Array.from(container.children).find((el) => el.dataset.color === currentColor);
+    if (defaultSwatch) {
+        updateSelectedSwatch(defaultSwatch);
+    } else if (container.firstChild) {
         updateSelectedSwatch(container.firstChild);
+        currentColor = container.firstChild.dataset.color;
+        currentColorName = container.firstChild.dataset.name;
     }
 }
 
 function updateSelectedSwatch(selectedDiv) {
     document.querySelectorAll('.swatch').forEach(el => el.classList.remove('selected'));
     selectedDiv.classList.add('selected');
+}
+
+function refreshSummary() {
+    const summary = document.getElementById('selection-summary');
+    if (!summary) return;
+    const firstName = document.getElementById('first-name').value;
+    const lastName = document.getElementById('last-name').value;
+    const birthDate = document.getElementById('birth-date').value;
+    const deathDate = document.getElementById('death-date').value;
+    const fontSize = document.getElementById('font-size').value;
+    const inscriptionColor = document.getElementById('inscription-color').selectedOptions[0].textContent;
+
+    summary.innerHTML = `
+        <div class="summary-item">
+            <p class="label">Modell</p>
+            <p class="value">${currentShape}</p>
+        </div>
+        <div class="summary-item">
+            <p class="label">Material</p>
+            <p class="value">${currentColorName}</p>
+        </div>
+        <div class="summary-item">
+            <p class="label">Inschrift</p>
+            <p class="value">${firstName} ${lastName}</p>
+        </div>
+        <div class="summary-item">
+            <p class="label">Daten</p>
+            <p class="value">* ${birthDate} · † ${deathDate}</p>
+        </div>
+        <div class="summary-item">
+            <p class="label">Schrift</p>
+            <p class="value">${fontSize} | ${inscriptionColor}</p>
+        </div>
+    `;
+}
+
+function updateLightBadge(value) {
+    const badge = document.getElementById('light-value');
+    if (badge) badge.textContent = `${Math.round(value * 100)}%`;
+}
+
+function resetView() {
+    if (!camera || !controls) return;
+    camera.position.set(5, 5, 8);
+    controls.target.set(0, 1.5, 0);
+    controls.update();
 }
 
 /**
@@ -823,8 +882,20 @@ function bindUI() {
         updateHeadstone();
     });
     ['first-name','last-name','birth-date','death-date','font-size','inscription-color','font-select'].forEach(id => {
-        document.getElementById(id).addEventListener('input', () => updateInscriptionCanvas());
+        const el = document.getElementById(id);
+        el.addEventListener('input', () => updateInscriptionCanvas());
+        el.addEventListener('change', () => updateInscriptionCanvas());
     });
+    document.getElementById('light-intensity').addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (directionalLight) directionalLight.intensity = val;
+        updateLightBadge(val);
+    });
+    document.getElementById('bg-select').addEventListener('change', (e) => {
+        backgroundColor = e.target.value;
+        if (renderer) renderer.setClearColor(new THREE.Color(backgroundColor));
+    });
+    document.getElementById('reset-view').addEventListener('click', () => resetView());
     document.getElementById('download-btn').addEventListener('click', () => {
         // Bild aus Canvas extrahieren
         renderer.render(scene, camera);
@@ -843,4 +914,6 @@ window.addEventListener('DOMContentLoaded', () => {
     populateColorOptions();
     bindUI();
     initScene();
+    updateLightBadge(parseFloat(document.getElementById('light-intensity').value));
+    refreshSummary();
 });
